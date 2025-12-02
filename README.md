@@ -1,9 +1,11 @@
 # Bookmarklet-duplicate-detection-HAL
 
-Bookmarklet.js : 
+**Bookmarklet.js :**
+
 Le code indenté avec commentaires. Fonctionne à al fois dans l'interface HAL classique et dans l'interface de modération, y compris sur les dépôts non encore indexés.
 
-Bookmarklet_for_copy.js
+**Bookmarklet_to_copy.js :**
+
 Le même code mais en une seule ligne pour faciliter la copie dans le marque-page sur navigateur
 
 Installation :
