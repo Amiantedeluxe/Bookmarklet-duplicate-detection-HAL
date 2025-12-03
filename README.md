@@ -6,7 +6,7 @@ Le code indenté avec commentaires. Fonctionne à al fois dans l'interface HAL c
 
 **Bookmarklet_to_copy.js :**
 
-Le même code mais en une seule ligne pour faciliter la copie dans le marque-page sur navigateur
+Le même code en une seule ligne pour faciliter la copie dans le marque-page sur navigateur
 
 Installation :
  
