@@ -50,7 +50,7 @@
     .then(d => {
       function tryDoc(doc) {
         if (!doc) {
-          c("<b>Aucune notice HAL trouvée.</b>");
+          c("<b>Aucune notice HAL trouvée. </b>");
           return;
         }
 
@@ -72,7 +72,7 @@
           .then(r2 => r2.json())
           .then(r => {
             if (!r.response || !r.response.docs) {
-              c("<b>Erreur lors de la recherche de doublons.</b>");
+              c("<b>Erreur lors de la recherche de doublons. </b>");
               return;
             }
 
@@ -120,7 +120,7 @@
           })
           .catch(e => c("Erreur notice HAL (fallback) : " + e));
       } else {
-        c("<b>Aucune notice HAL trouvée</b>");
+        c("<b>Aucune notice HAL trouvée </b>");
       }
     })
     .catch(e => c("Erreur notice HAL : " + e));
