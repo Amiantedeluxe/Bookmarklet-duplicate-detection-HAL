@@ -1,143 +1,127 @@
 (function() {
-  // Fonction pour afficher les messages dans une popup
-  function showMessage(message) {
-    let div = document.createElement('div');
-    div.style.position = 'fixed';
-    div.style.top = '20px';
-    div.style.right = '20px';
-    div.style.backgroundColor = 'white';
-    div.style.border = '2px solid #444';
-    div.style.padding = '10px';
-    div.style.zIndex = 9999;
-    div.style.maxHeight = '70%';
-    div.style.overflowY = 'auto';
-    div.style.width = '400px';
-    div.innerHTML = message;
-    
-    let closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Fermer';
-    closeBtn.onclick = () => div.remove();
-    div.appendChild(closeBtn);
-    document.body.appendChild(div);
+  function c(m) {
+    let d = document.createElement('div');
+    d.style.position = 'fixed';
+    d.style.top = '20px';
+    d.style.right = '20px';
+    d.style.backgroundColor = 'white';
+    d.style.border = '2px solid #444';
+    d.style.padding = '10px';
+    d.style.zIndex = 9999;
+    d.style.maxHeight = '70%';
+    d.style.overflowY = 'auto';
+    d.style.width = '400px';
+    d.innerHTML = m;
+    let b = document.createElement('button');
+    b.textContent = 'Fermer';
+    b.onclick = () => d.remove();
+    d.appendChild(b);
+    document.body.appendChild(d);
   }
 
-  // Extraction des informations depuis l'URL
-  let pathParts = window.location.pathname.split('/');
-  let halId, docid, apiUrl;
+  let p = window.location.pathname.split('/');
+  let h, docid, u;
 
   // Détection du type d'URL
-  if (pathParts.includes('moderate') && pathParts.includes('docid')) {
-    // URL de modération : utiliser l'API CRAC
-    let idx = pathParts.indexOf('docid');
-    if (idx !== -1 && pathParts[idx + 1]) {
-      docid = pathParts[idx + 1];
-      apiUrl = `https://api.archives-ouvertes.fr/crac/hal/?q=docid:${docid}&fl=halId_s,title_s,doiId_s&wt=json`;
+  if (p.includes('moderate') && p.includes('docid')) {
+    // URL de modération
+    let idx = p.indexOf('docid');
+    if (idx !== -1 && p[idx + 1]) {
+      docid = p[idx + 1];
+      u = `https://api.archives-ouvertes.fr/crac/hal/?q=docid:${docid}&fl=halId_s,title_s,doiId_s&wt=json`;
     }
   } else {
-    // URL classique : utiliser l'API search standard
-    halId = pathParts[pathParts.length - 1];
-    if (halId && halId.match(/^hal/)) {
-      apiUrl = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${halId}"&fl=halId_s,title_s,doiId_s&wt=json`;
+    // URL classique - accepte tous les types d'identifiants HAL
+    h = p[p.length - 1];
+    if (h) {
+      u = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${h}"&fl=halId_s,title_s,doiId_s&wt=json`;
     }
   }
 
-  if (!apiUrl) {
-    showMessage("<b>URL non reconnue</b>");
+  if (!u) {
+    c("<b>URL non reconnue</b>");
     return;
   }
 
-  let halIdBase = halId ? halId.replace(/v\d+$/, '') : '';
+  let h_base = h ? h.replace(/v\d+$/, '') : '';
 
-  // Récupération de la notice HAL
-  fetch(apiUrl)
-    .then(response => response.json())
-    .then(data => {
-      function processDocument(doc) {
+  fetch(u)
+    .then(r => r.json())
+    .then(d => {
+      function tryDoc(doc) {
         if (!doc) {
-          showMessage("<b>Aucune notice HAL trouvée.</b>");
+          c("<b>Aucune notice HAL trouvée.</b>");
           return;
         }
 
-        let currentHalId = doc.halId_s || '';
-        if (!halIdBase) halIdBase = currentHalId.replace(/v\d+$/, '');
+        let halId = doc.halId_s || '';
+        if (!h_base) h_base = halId.replace(/v\d+$/, '');
 
-        let title = Array.isArray(doc.title_s) ? doc.title_s[0] : doc.title_s || "";
+        let t = Array.isArray(doc.title_s) ? doc.title_s[0] : doc.title_s || "";
         let doi = Array.isArray(doc.doiId_s) ? doc.doiId_s[0] : doc.doiId_s || "";
+        let mots = t.replace(/[()":!?,;'-]/g, "").split(/\s+/).slice(0, 12).join(" ");
         
-        // Extraction des 12 premiers mots du titre pour la recherche
-        let titleWords = title.replace(/[()":!?,;'-]/g, "").split(/\s+/).slice(0, 12).join(" ");
+        let qParts = [];
+        if (doi) qParts.push(`doiId_s:"${doi}"`);
+        if (mots) qParts.push(`title_t:(${mots})`);
+        let q = qParts.join(" OR ");
         
-        // Construction de la requête de recherche de doublons
-        let queryParts = [];
-        if (doi) queryParts.push(`doiId_s:"${doi}"`);
-        if (titleWords) queryParts.push(`title_t:(${titleWords})`);
-        let searchQuery = queryParts.join(" OR ");
-        
-        let searchUrl = `https://api.archives-ouvertes.fr/search/?q=${encodeURIComponent(searchQuery)}&fl=halId_s,title_s,doiId_s&wt=json&rows=50`;
+        let s = `https://api.archives-ouvertes.fr/search/?q=${encodeURIComponent(q)}&fl=halId_s,title_s,doiId_s&wt=json&rows=50`;
 
-        // Recherche des doublons potentiels
-        fetch(searchUrl)
-          .then(response => response.json())
-          .then(searchResults => {
-            if (!searchResults.response || !searchResults.response.docs) {
-              showMessage("<b>Erreur lors de la recherche de doublons.</b>");
+        fetch(s)
+          .then(r2 => r2.json())
+          .then(r => {
+            if (!r.response || !r.response.docs) {
+              c("<b>Erreur lors de la recherche de doublons.</b>");
               return;
             }
 
-            // Filtrage des résultats pour exclure la notice courante
-            let duplicates = searchResults.response.docs.filter(x => {
-              let xId = (x.halId_s || "").replace(/v\d+$/, '');
-              let xDoi = Array.isArray(x.doiId_s) ? x.doiId_s[0] : x.doiId_s || "";
-              
-              // Exclure la notice elle-même
-              if (xId === halIdBase) return false;
-              
-              // Si les deux ont un DOI, ils doivent matcher
-              if (doi && xDoi) return xDoi === doi;
-              
-              // Sinon accepter (match par titre)
+            let res = r.response.docs.filter(x => {
+              let xid = (x.halId_s || "").replace(/v\d+$/, '');
+              let xdoi = Array.isArray(x.doiId_s) ? x.doiId_s[0] : x.doiId_s || "";
+              if (xid === h_base) return false;
+              if (doi && xdoi) return xdoi === doi;
               return true;
             });
 
-            if (duplicates.length === 0) {
-              showMessage("<b>Pas de doublon détecté</b>");
+            if (res.length === 0) {
+              c("<b>Pas de doublon détecté</b>");
               return;
             }
 
-            // Affichage des doublons
             let content = "<b>Doublons potentiels :</b><ul>";
-            duplicates.forEach(x => {
+            res.forEach(x => {
               let id = x.halId_s;
-              let dupTitle = Array.isArray(x.title_s) ? x.title_s[0] : x.title_s || "";
-              let dupDoi = Array.isArray(x.doiId_s) ? x.doiId_s[0] : x.doiId_s || "";
+              let title = Array.isArray(x.title_s) ? x.title_s[0] : x.title_s || "";
+              let xd = Array.isArray(x.doiId_s) ? x.doiId_s[0] : x.doiId_s || "";
               let url = "https://hal.science/" + id;
-              content += `<li><a href="${url}" target="_blank">${id}</a> | ${dupTitle} | ${dupDoi ? 'DOI: ' + dupDoi : ''}</li>`;
+              content += `<li><a href="${url}" target="_blank">${id}</a> | ${title} | ${xd ? 'DOI: ' + xd : ''}</li>`;
             });
             content += "</ul>";
-            showMessage(content);
+            c(content);
           })
-          .catch(error => showMessage("Erreur recherche doublons : " + error));
+          .catch(e => c("Erreur recherche doublons : " + e));
       }
 
       // Traitement de la réponse
-      if (data && data.response && data.response.docs && data.response.docs.length) {
-        processDocument(data.response.docs[0]);
-      } else if (halIdBase) {
-        // Fallback pour les URLs avec version
-        let fallbackUrl = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${halIdBase}"&fl=halId_s,title_s,doiId_s&wt=json`;
-        fetch(fallbackUrl)
-          .then(response => response.json())
-          .then(fallbackData => {
-            if (fallbackData && fallbackData.response && fallbackData.response.docs && fallbackData.response.docs.length) {
-              processDocument(fallbackData.response.docs[0]);
+      if (d && d.response && d.response.docs && d.response.docs.length) {
+        tryDoc(d.response.docs[0]);
+      } else if (h_base !== h) {
+        // Fallback seulement si h avait une version (v1, v2, etc.)
+        let u2 = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${h_base}"&fl=halId_s,title_s,doiId_s&wt=json`;
+        fetch(u2)
+          .then(r3 => r3.json())
+          .then(d2 => {
+            if (d2 && d2.response && d2.response.docs && d2.response.docs.length) {
+              tryDoc(d2.response.docs[0]);
             } else {
-              showMessage("<b>Aucune notice HAL trouvée.</b>");
+              c("<b>Aucune notice HAL trouvée.</b>");
             }
           })
-          .catch(error => showMessage("Erreur notice HAL (fallback) : " + error));
+          .catch(e => c("Erreur notice HAL (fallback) : " + e));
       } else {
-        showMessage("<b>Aucune notice HAL trouvée</b>");
+        c("<b>Aucune notice HAL trouvée</b>");
       }
     })
-    .catch(error => showMessage("Erreur notice HAL : " + error));
+    .catch(e => c("Erreur notice HAL : " + e));
 })();
