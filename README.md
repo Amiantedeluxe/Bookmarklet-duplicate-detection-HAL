@@ -8,14 +8,14 @@ Le code indenté avec commentaires. Fonctionne à al fois dans l'interface HAL c
 
 Le même code en une seule ligne pour faciliter la copie dans le marque-page sur navigateur
 
-Installation :
+### Installation :
  
 	1. Créer un nouveau favori dans le navigateur (ou marque-page sur Firefox)
 	2. Sur le favori, faire clic droit > "modifier…" (ou "modifier le marque-page" sur Firefox)
 	3. Dans la case "URL", coller le script puis enregistrer
 	4. Une fois sur la page d'un dépôt HAL, cliquer sur le favori pour exécuter le script
 
-Fonctionnement :
+### Fonctionnement :
 
 	1. Le script récupère les métadonnées de la notice HAL ouverte (doi + titre)
 	2. Fait une requête API sur le doi et sur les 12 premiers mots du titre
