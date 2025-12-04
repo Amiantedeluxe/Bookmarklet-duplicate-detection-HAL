@@ -57,13 +57,19 @@
         let halId = doc.halId_s || '';
         if (!h_base) h_base = halId.replace(/v\d+$/, '');
 
-        let t = Array.isArray(doc.title_s) ? doc.title_s[0] : doc.title_s || "";
+        let titles = Array.isArray(doc.title_s) ? doc.title_s : [doc.title_s || ""];
         let doi = Array.isArray(doc.doiId_s) ? doc.doiId_s[0] : doc.doiId_s || "";
-        let mots = t.replace(/[()":!?,;'-]/g, "").split(/\s+/).slice(0, 12).join(" ");
-        
+
         let qParts = [];
         if (doi) qParts.push(`doiId_s:"${doi}"`);
-        if (mots) qParts.push(`title_t:(${mots})`);
+
+        // Ajouter une partie de requête pour CHAQUE titre
+        titles.forEach(t => {
+          if (t) {
+            let mots = t.replace(/[()":!?,;'-]/g, "").split(/\s+/).slice(0, 12).join(" ");
+            if (mots) qParts.push(`title_t:(${mots})`);
+          }
+        });
         let q = qParts.join(" OR ");
         
         let s = `https://api.archives-ouvertes.fr/search/?q=${encodeURIComponent(q)}&fl=halId_s,title_s,doiId_s&wt=json&rows=50`;
