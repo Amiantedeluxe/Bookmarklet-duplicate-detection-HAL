@@ -22,3 +22,4 @@ Fonctionnement :
 	3. Exclut la notice courante et les notices avec un doi strictement différent des résultats
 	4. Affiche les doublons potentiels dans une fenêtre flottante, avec liens cliquables, titre et doi
 
+<img width="1092" height="435" alt="Capture d&#39;écran 2025-11-28 103045" src="https://github.com/user-attachments/assets/32b8e174-fca6-4ff6-9609-d9e41edca859" />
