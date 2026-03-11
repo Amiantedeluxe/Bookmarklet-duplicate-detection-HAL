@@ -19,6 +19,18 @@
     document.body.appendChild(d);
   }
 
+  function getHalIdFromMeta() {
+  let metas = document.querySelectorAll('meta[name="DC.identifier"]');
+  for (let meta of metas) {
+    let content = meta.getAttribute('content');
+    if (content && content.match(/^hal[a-z]*-\d+/)) {
+      return content;
+    }
+  }
+  return null;
+}
+
+
   let p = window.location.pathname.split('/');
   let h, docid, u;
 
@@ -109,7 +121,7 @@
           .catch(e => c("Erreur recherche doublons : " + e));
       }
 
-      // Traitement de la réponse
+// Traitement de la réponse
       if (d && d.response && d.response.docs && d.response.docs.length) {
         tryDoc(d.response.docs[0]);
       } else if (h_base !== h) {
@@ -121,12 +133,46 @@
             if (d2 && d2.response && d2.response.docs && d2.response.docs.length) {
               tryDoc(d2.response.docs[0]);
             } else {
-              c("<b>Aucune notice HAL trouvée.</b>");
+              // Si toujours rien, essayer avec meta tags
+              let metaHalId = getHalIdFromMeta();
+              if (metaHalId && metaHalId !== h && metaHalId !== h_base) {
+                let u3 = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${metaHalId}"&fl=halId_s,title_s,doiId_s&wt=json`;
+                h_base = metaHalId.replace(/v\d+$/, '');
+                fetch(u3)
+                  .then(r4 => r4.json())
+                  .then(d3 => {
+                    if (d3 && d3.response && d3.response.docs && d3.response.docs.length) {
+                      tryDoc(d3.response.docs[0]);
+                    } else {
+                      c("<b>Aucune notice HAL trouvée.</b>");
+                    }
+                  })
+                  .catch(e => c("Erreur notice HAL (meta fallback) : " + e));
+              } else {
+                c("<b>Aucune notice HAL trouvée.</b>");
+              }
             }
           })
           .catch(e => c("Erreur notice HAL (fallback) : " + e));
       } else {
-        c("<b>Aucune notice HAL trouvée </b>");
+        // Essayer avec meta tags (cas fusion/redirection)
+        let metaHalId = getHalIdFromMeta();
+        if (metaHalId && metaHalId !== h) {
+          let u3 = `https://api.archives-ouvertes.fr/search/?q=halId_s:"${metaHalId}"&fl=halId_s,title_s,doiId_s&wt=json`;
+          h_base = metaHalId.replace(/v\d+$/, '');
+          fetch(u3)
+            .then(r4 => r4.json())
+            .then(d3 => {
+              if (d3 && d3.response && d3.response.docs && d3.response.docs.length) {
+                tryDoc(d3.response.docs[0]);
+              } else {
+                c("<b>Aucune notice HAL trouvée.</b>");
+              }
+            })
+            .catch(e => c("Erreur notice HAL (meta fallback) : " + e));
+        } else {
+          c("<b>Aucune notice HAL trouvée </b>");
+        }
       }
     })
     .catch(e => c("Erreur notice HAL : " + e));
